@@ -18,6 +18,8 @@ const makeSurvey = async (): Promise<SurveyModel> => {
     answers: [{
       answer: 'any_answer',
       image: 'any_image'
+    }, {
+      answer: 'other_answer'
     }],
     date: new Date()
   })
@@ -55,6 +57,31 @@ describe('SurveyResult Repository', () => {
   })
 
   describe('save()', () => {
+    test("Should update survey result if its not new", async () => {
+      const sut = makeSut()
+      const survey = await makeSurvey()
+      const account = await makeAccount()
+      const res = await surveyResultCollection.insertOne({
+        surveyId: survey.id,
+        accountId: account.id,
+        answer: survey.answers[0].answer,
+        date: new Date()
+      })
+      const surveyResultById = await surveyResultCollection.findOne({
+        _id: res.insertedId
+      })
+      const surveyResult = await sut.save({
+        surveyId: survey.id,
+        accountId: account.id,
+        answer: survey.answers[1].answer,
+        date: new Date()
+      })
+      expect(surveyResult).toBeTruthy()
+      expect(surveyResult.id).toBeTruthy()
+      expect(surveyResultById._id).toEqual(surveyResult.id)
+      expect(surveyResult.answer).toBe(survey.answers[1].answer)
+    })
+
     test("Should save a survey result if its new", async () => {
       const sut = makeSut()
       const survey = await makeSurvey()
